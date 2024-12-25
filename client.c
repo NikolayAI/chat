@@ -6,23 +6,23 @@
 #include <unistd.h>
 
 #define MAX_MESSAGE_SIZE 1024
-#define ADDRESS "127.0.0.1"
 #define HELLO_MESSAGE "Connected to the chat\n"
 
 int main(int argc, char *argv[]) {
     int port;
 
-    if (argc < 3) {
-        perror("usage: ./client $port $name\n");
+    if (argc < 4) {
+        perror("usage: ./client $address $port $name\n");
         exit(EXIT_FAILURE);
     }
 
-    if (sscanf(argv[1], "%i", &port) != 1) {
+    if (sscanf(argv[2], "%i", &port) != 1) {
         perror("port should be a number\n");
         exit(EXIT_FAILURE);
     }
 
-    char *name = argv[2];
+    char *address = argv[1];
+    char *name = argv[3];
     int client_socket;
 
     struct sockaddr_in server_address;
@@ -31,7 +31,11 @@ int main(int argc, char *argv[]) {
 
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(port);
-    server_address.sin_addr.s_addr = inet_addr(ADDRESS);
+
+    if(inet_pton (AF_INET, address, &server_address.sin_addr) != 1) {
+        perror("address parsing failed");
+        exit(EXIT_FAILURE);
+    }
 
     client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (client_socket == -1) {
